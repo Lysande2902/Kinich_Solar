@@ -1,0 +1,51 @@
+{
+  "version": "2026-11-01",
+  "iva": 0.16,
+  "cargo_minimo_mes": 40.0,
+  "tarifas": {
+    "1": {
+      "bloques": [
+        {"hasta_kwh_mes": 75, "precio": 1.05},
+        {"hasta_kwh_mes": 140, "precio": 1.28},
+        {"hasta_kwh_mes": null, "precio": 3.75}
+      ],
+      "dac_limite_kwh_mes": 250
+    },
+    "1B": {
+      "bloques": [
+        {"hasta_kwh_mes": 125, "precio": 0.98},
+        {"hasta_kwh_mes": 225, "precio": 1.20},
+        {"hasta_kwh_mes": null, "precio": 3.65}
+      ],
+      "dac_limite_kwh_mes": 400
+    },
+    "1C": {
+      "bloques": [
+        {"hasta_kwh_mes": 150, "precio": 0.92},
+        {"hasta_kwh_mes": 300, "precio": 1.15},
+        {"hasta_kwh_mes": null, "precio": 3.60}
+      ],
+      "dac_limite_kwh_mes": 850
+    },
+    "1D": {
+      "bloques": [
+        {"hasta_kwh_mes": 175, "precio": 0.88},
+        {"hasta_kwh_mes": 400, "precio": 1.10},
+        {"hasta_kwh_mes": null, "precio": 3.55}
+      ],
+      "dac_limite_kwh_mes": 1000
+    },
+    "1F": {
+      "bloques": [
+        {"hasta_kwh_mes": 300, "precio": 0.80},
+        {"hasta_kwh_mes": 1200, "precio": 0.95},
+        {"hasta_kwh_mes": null, "precio": 3.50}
+      ],
+      "dac_limite_kwh_mes": 2500
+    },
+    "DAC": {
+      "cargo_fijo_mes": 140.0,
+      "precio_kwh": 5.85
+    }
+  }
+}

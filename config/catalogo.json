@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1,
+    "nombre": "Canadian Solar HiKu6 Mono PERC 550W",
+    "potencia_w": 550,
+    "precio_wp_mxn": 22.50
+  },
+  {
+    "id": 2,
+    "nombre": "Jinko Solar Tiger Neo N-Type 585W",
+    "potencia_w": 585,
+    "precio_wp_mxn": 24.00
+  },
+  {
+    "id": 3,
+    "nombre": "Longi Solar Hi-MO 5 500W",
+    "potencia_w": 500,
+    "precio_wp_mxn": 21.80
+  }
+]

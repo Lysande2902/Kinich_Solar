@@ -1,0 +1,9 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+kinich.db
+data/recibos_prueba/*
+!data/recibos_prueba/.gitkeep
+data/pvgis_cache.json
+.pytest_cache/

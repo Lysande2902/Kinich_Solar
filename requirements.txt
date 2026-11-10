@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+python-telegram-bot>=20
+google-genai
+httpx
+pydantic
+pydantic-settings
+jsonschema
+pvlib
+pillow
+python-multipart
+pytest
+locust
