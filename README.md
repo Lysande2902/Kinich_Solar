@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/logo.jpg" alt="Kinich Solar Logo" width="160" />
+</p>
+
 # Kinich Solar
 
 > Prototipo funcional en 4 semanas (versión costo $0)  

@@ -1,18 +1,32 @@
 from fpdf import FPDF
 from datetime import date
 import io
+import os
+
+LOGO_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "assets", "logo.jpg")
 
 class ReporteSolarPDF(FPDF):
     def header(self):
+        # Inclusión del logo oficial si existe
+        if os.path.exists(LOGO_PATH):
+            self.image(LOGO_PATH, x=10, y=8, w=15, h=15)
+            text_x = 28
+        else:
+            text_x = 10
+            
+        self.set_xy(text_x, 8)
         self.set_font("helvetica", "B", 15)
         self.set_text_color(24, 43, 73)  # Azul marino institucional
-        self.cell(0, 8, "KINICH SOLAR", new_x="LMARGIN", new_y="NEXT", align="L")
+        self.cell(0, 7, "KINICH SOLAR", new_x="LMARGIN", new_y="NEXT", align="L")
+        
+        self.set_xy(text_x, 15)
         self.set_font("helvetica", "", 9)
         self.set_text_color(100, 116, 139)
         self.cell(0, 5, "Estudio de Dimensionamiento Fotovoltaico y Viabilidad Financiera", new_x="LMARGIN", new_y="NEXT", align="L")
+        
         self.set_draw_color(226, 232, 240)
-        self.line(10, self.get_y() + 2, 200, self.get_y() + 2)
-        self.ln(5)
+        self.line(10, 26, 200, 26)
+        self.set_y(28)
 
     def footer(self):
         self.set_y(-15)

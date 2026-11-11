@@ -17,6 +17,7 @@ def antiguedad_tarifas_dias(cfg: dict) -> int:
 def evaluar_semaforo(retorno_anios: float | None, tarifa: str) -> dict:
     if tarifa.upper() == "DAC":
         return {
+            "color": "VERDE",
             "nivel": "Excelente viabilidad",
             "indicador": "[Viable hoy]",
             "titulo": "Tarifa Doméstica de Alto Consumo (DAC)",
@@ -28,6 +29,7 @@ def evaluar_semaforo(retorno_anios: float | None, tarifa: str) -> dict:
         }
     if retorno_anios is None:
         return {
+            "color": "ROJO",
             "nivel": "No recomendado",
             "indicador": "[No rentable]",
             "titulo": "Consumo insuficiente para retorno medible",
@@ -38,6 +40,7 @@ def evaluar_semaforo(retorno_anios: float | None, tarifa: str) -> dict:
         }
     if retorno_anios <= 6.5:
         return {
+            "color": "VERDE",
             "nivel": "Alta viabilidad",
             "indicador": "[Viable hoy]",
             "titulo": "Inversión altamente conveniente",
@@ -48,6 +51,7 @@ def evaluar_semaforo(retorno_anios: float | None, tarifa: str) -> dict:
         }
     elif retorno_anios <= 10.0:
         return {
+            "color": "AMARILLO",
             "nivel": "Viabilidad media",
             "indicador": "[Viable con ajustes]",
             "titulo": "Inversión conveniente a mediano plazo",
@@ -59,6 +63,7 @@ def evaluar_semaforo(retorno_anios: float | None, tarifa: str) -> dict:
         }
     else:
         return {
+            "color": "ROJO",
             "nivel": "Baja viabilidad",
             "indicador": "[Revisar eficiencia primero]",
             "titulo": "Proyecto a largo plazo",
