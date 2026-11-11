@@ -318,7 +318,10 @@ async def mostrar_menu_aires(message):
 
 async def botones(update: Update, context: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
-    await q.answer()
+    try:
+        await q.answer()
+    except Exception:
+        pass
     user_id = q.from_user.id
 
     if q.data == "acepto":
@@ -770,7 +773,15 @@ def main():
         print("ERROR: TELEGRAM_TOKEN no configurado en .env")
         return
 
-    app = ApplicationBuilder().token(settings.TELEGRAM_TOKEN).build()
+    app = (
+        ApplicationBuilder()
+        .token(settings.TELEGRAM_TOKEN)
+        .read_timeout(30)
+        .write_timeout(30)
+        .connect_timeout(30)
+        .pool_timeout(30)
+        .build()
+    )
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("ayuda", ayuda))
     app.add_handler(CommandHandler("reiniciar", reiniciar))
