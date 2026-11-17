@@ -4,7 +4,7 @@ import secrets
 from contextlib import asynccontextmanager
 from PIL import Image, ImageOps
 import pypdfium2 as pdfium
-from fastapi import FastAPI, UploadFile, File, HTTPException, Depends
+from fastapi import FastAPI, UploadFile, File, HTTPException, Depends, Body
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi.responses import HTMLResponse
 
@@ -222,9 +222,51 @@ def endpoint_feedback(s: SolicitudFeedback):
         })
     return {"status": "ok", "mensaje": "Retroalimentación registrada."}
 
+@app.get("/api/v1/generar-pdf")
 @app.post("/api/v1/generar-pdf")
-def endpoint_generar_pdf(cot: dict, telegram_id: int = 0):
+def endpoint_generar_pdf(cot: dict = Body(None), telegram_id: int = 0):
     try:
+        # Si la petición es GET sin cuerpo, se consulta la última cotización registrada para el usuario
+        if not cot:
+            with get_db() as db:
+                fila = db.execute("""
+                    SELECT c.*, r.tarifa, r.kwh_periodo, r.total_pagar, r.periodo_inicio, r.periodo_fin
+                    FROM cotizaciones c
+                    JOIN recibos r ON r.id = c.recibo_id
+                    JOIN clientes cl ON cl.id = r.cliente_id
+                    WHERE cl.telegram_id = ?
+                    ORDER BY c.id DESC LIMIT 1
+                """, (telegram_id,)).fetchone()
+
+                if fila:
+                    f = dict(fila)
+                    cot = {
+                        "tarifa": f.get("tarifa", "1C"),
+                        "kwh_mes": round((f.get("kwh_periodo", 600) / 60) * 30.4, 1),
+                        "recibo_mes_real": round((f.get("total_pagar", 1500) / 60) * 30.4, 2),
+                        "tarifa_efectiva_kwh": round(f.get("total_pagar", 1500) / max(1, f.get("kwh_periodo", 600)), 2),
+                        "dias_periodo": 60,
+                        "fuente_irradiacion": f.get("fuente_irradiacion", "PVGIS"),
+                        "semaforo": {"color": "AMARILLO", "titulo": "Viable con ajustes", "mensaje": "Inversión conveniente a mediano plazo."},
+                        "opciones": [{
+                            "etiqueta": "Recomendado (90%)",
+                            "paneles": f.get("paneles", 10),
+                            "kwp": f.get("kwp", 5.5),
+                            "costo_min": f.get("costo_min", 110000),
+                            "costo_max": f.get("costo_max", 135000),
+                            "ahorro_mensual": f.get("ahorro_mensual", 1100),
+                            "retorno_anios": f.get("recuperacion_anios", 8.5)
+                        }]
+                    }
+                else:
+                    cot = {"tarifa": "1C", "kwh_mes": 500, "recibo_mes_real": 1200, "opciones": []}
+
+        # Soporte para cuerpo anidado {"cotizacion": {...}, "telegram_id": ...}
+        if isinstance(cot, dict) and "cotizacion" in cot:
+            if not telegram_id and "telegram_id" in cot:
+                telegram_id = cot["telegram_id"]
+            cot = cot["cotizacion"]
+
         pdf_bytes = generar_ficha_tecnica_pdf(cot, telegram_id=telegram_id)
         return Response(
             content=pdf_bytes,

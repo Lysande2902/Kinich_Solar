@@ -7,3 +7,9 @@ data/recibos_prueba/*
 !data/recibos_prueba/.gitkeep
 data/pvgis_cache.json
 .pytest_cache/
+node_modules/
+.expo/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+

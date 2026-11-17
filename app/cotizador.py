@@ -161,6 +161,7 @@ def cotizar(
     semaforo = evaluar_semaforo(opcion_recomendada["retorno_anios"], tarifa)
 
     return {
+        "tarifa": tarifa,
         "kwh_mes": kwh_mes,
         "recibo_mes_real": recibo_mes_real,
         "tarifa_efectiva_kwh": tarifa_efectiva_kwh,
