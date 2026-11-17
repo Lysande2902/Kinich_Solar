@@ -168,7 +168,23 @@ export default function ProposalScreen({ navigation, route }) {
           <Text style={styles.btnSecondaryText}>Simular equipo adicional  +</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.linkBtn} activeOpacity={0.7}>
+        <TouchableOpacity
+          style={styles.linkBtn}
+          activeOpacity={0.7}
+          onPress={() => {
+            Alert.alert(
+              'Solicitar Asesoría Técnica',
+              'Un ingeniero certificado de Kinich Solar revisará tu anteproyecto sin ningún compromiso. ¿Deseas confirmar la solicitud?',
+              [
+                { text: 'Cancelar', style: 'cancel' },
+                {
+                  text: 'Confirmar solicitud',
+                  onPress: () => Alert.alert('Solicitud enviada', '¡Listo! Nos pondremos en contacto contigo en breve para coordinar tu asesoría.')
+                }
+              ]
+            );
+          }}
+        >
           <Text style={styles.linkText}>Solicitar visita técnica sin costo  ›</Text>
         </TouchableOpacity>
       </ScrollView>
