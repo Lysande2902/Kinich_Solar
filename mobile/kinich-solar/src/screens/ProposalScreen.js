@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
-  SafeAreaView, StatusBar, Alert, ActivityIndicator, Linking,
+  SafeAreaView, StatusBar, Alert, ActivityIndicator, Linking, Modal,
 } from 'react-native';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { COLORS, FONTS, SHADOW } from '../constants/theme';
 import ScaleSelector from '../components/ScaleSelector';
 import SemaphoreCard from '../components/SemaphoreCard';
@@ -15,6 +15,7 @@ export default function ProposalScreen({ navigation, route }) {
   const { cotizacion = {}, deviceId, tarifa: tarifaParam, cotizacionAjustada } = route.params || {};
   const [scale, setScale] = useState('90');
   const [downloading, setDownloading] = useState(false);
+  const [panelModal, setPanelModal] = useState(false);
 
   // Si viene una cotización actualizada desde el simulador, se utiliza con prioridad
   const cot = cotizacionAjustada || cotizacion;
@@ -108,11 +109,20 @@ export default function ProposalScreen({ navigation, route }) {
         {/* Tarjeta de métricas */}
         <View style={styles.metricsCard}>
           <View style={styles.metricsRow}>
-            <View style={styles.metricBox}>
-              <Text style={styles.metricLabel}>PANELES</Text>
+            <TouchableOpacity
+              style={styles.metricBox}
+              onPress={() => setPanelModal(true)}
+              activeOpacity={0.7}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Text style={styles.metricLabel}>PANELES</Text>
+                <View style={styles.infoBadge}>
+                  <Text style={styles.infoBadgeText}>¿Qué panel es? ℹ️</Text>
+                </View>
+              </View>
               <Text style={styles.metricVal}>{opt.paneles || '—'} × 550 W</Text>
-              <Text style={styles.metricSub}>Tier 1 · 25 años garantía</Text>
-            </View>
+              <Text style={styles.metricSub}>Canadian Solar · Grado A (25 años)</Text>
+            </TouchableOpacity>
             <View style={styles.metricBox}>
               <Text style={styles.metricLabel}>CAPACIDAD</Text>
               <Text style={styles.metricVal}>{opt.kwp || '—'} kWp</Text>
@@ -239,6 +249,62 @@ export default function ProposalScreen({ navigation, route }) {
           </View>
         </TouchableOpacity>
       </ScrollView>
+
+      {/* Modal explicativo del tipo de panel en lenguaje sencillo */}
+      <Modal visible={panelModal} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalBox}>
+            <View style={styles.modalTop}>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <MaterialCommunityIcons name="solar-panel" size={26} color={COLORS.amber} style={{ marginRight: 8 }} />
+                <Text style={styles.modalHeading}>¿Qué tipo de panel incluye?</Text>
+              </View>
+              <TouchableOpacity onPress={() => setPanelModal(false)} style={{ padding: 4 }}>
+                <Feather name="x" size={22} color={COLORS.textMuted} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 420 }}>
+              <View style={styles.specCard}>
+                <Text style={styles.specTitle}>☀️ Modelo y Marca</Text>
+                <Text style={styles.specDesc}>
+                  Canadian Solar 550W (o Jinko Solar 585W). Son las dos marcas más confiables y vendidas a nivel mundial.
+                </Text>
+              </View>
+
+              <View style={styles.specCard}>
+                <Text style={styles.specTitle}>⚫ Tecnología de Silicio Negro</Text>
+                <Text style={styles.specDesc}>
+                  Son paneles monocristalinos modernos (color negro elegante). Absorben más luz del sol incluso en días nublados y aguantan el calor fuerte de Yucatán sin perder fuerza.
+                </Text>
+              </View>
+
+              <View style={styles.specCard}>
+                <Text style={styles.specTitle}>🛡️ Garantía de 25 Años</Text>
+                <Text style={styles.specDesc}>
+                  • 12 años directo contra cualquier falla de fábrica.{'\n'}
+                  • 25 años garantizados produciendo al menos el 85% de su energía original.
+                </Text>
+              </View>
+
+              <View style={styles.specCard}>
+                <Text style={styles.specTitle}>🏆 Calidad Grado A (Tier 1)</Text>
+                <Text style={styles.specDesc}>
+                  Significa que no son marcas genéricas. Cuentan con certificación para interconexión oficial con CFE y pruebas contra vientos de huracán.
+                </Text>
+              </View>
+            </ScrollView>
+
+            <TouchableOpacity
+              style={styles.modalCloseBtn}
+              onPress={() => setPanelModal(false)}
+            >
+              <Text style={styles.modalCloseText}>Entendido  ✓</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
     </SafeAreaView>
   );
 }
@@ -287,4 +353,15 @@ const styles = StyleSheet.create({
   btnSecondaryText: { ...FONTS.h3, color: COLORS.navy },
   linkBtn: { alignItems: 'center', paddingVertical: 8 },
   linkText: { ...FONTS.body, color: COLORS.textSecondary },
+  infoBadge: { backgroundColor: '#FEF3C7', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
+  infoBadgeText: { fontSize: 9, color: '#B45309', fontWeight: '700' },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', padding: 20 },
+  modalBox: { backgroundColor: COLORS.white, borderRadius: 20, padding: 20, ...SHADOW },
+  modalTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
+  modalHeading: { ...FONTS.h3, color: COLORS.navy, fontSize: 16 },
+  specCard: { backgroundColor: COLORS.bgSoft, borderRadius: 12, padding: 14, marginBottom: 10, borderWidth: 1, borderColor: COLORS.border },
+  specTitle: { ...FONTS.h3, color: COLORS.navy, fontSize: 14, marginBottom: 4 },
+  specDesc: { ...FONTS.bodySmall, color: COLORS.textSecondary, lineHeight: 18 },
+  modalCloseBtn: { backgroundColor: COLORS.navy, borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 10 },
+  modalCloseText: { ...FONTS.h3, color: COLORS.white, fontSize: 15 },
 });
