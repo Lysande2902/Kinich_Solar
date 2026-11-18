@@ -67,8 +67,8 @@ export default function VerificationScreen({ navigation, route }) {
       const res = await cotizar(payload);
       navigation.navigate('Proposal', { cotizacion: res.data, deviceId, tarifa });
     } catch (err) {
-      const msg = err?.response?.data?.detail || 'Error al calcular. Verifica la conexión con el servidor.';
-      Alert.alert('Error de cálculo', msg);
+      const msg = err?.response?.data?.detail || 'No se pudo conectar con el servicio en este momento. Por favor verifica tu conexión a internet o intenta más tarde.';
+      Alert.alert('Aviso del servicio', msg);
     } finally {
       setLoading(false);
     }

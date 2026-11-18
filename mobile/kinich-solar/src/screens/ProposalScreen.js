@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
-  SafeAreaView, StatusBar, Alert, ActivityIndicator,
+  SafeAreaView, StatusBar, Alert, ActivityIndicator, Linking,
 } from 'react-native';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { COLORS, FONTS, SHADOW } from '../constants/theme';
 import ScaleSelector from '../components/ScaleSelector';
 import SemaphoreCard from '../components/SemaphoreCard';
@@ -25,6 +26,12 @@ export default function ProposalScreen({ navigation, route }) {
   const co2 = opt.co2_ton_anio || Math.round((opt.produccion_anual_kwh || 0) * 0.00045 * 10) / 10 || 3.9;
   const arboles = opt.arboles_equiv || Math.round(co2 * 45) || 160;
   const retornoAnios = opt.retorno_anios ?? opt.recuperacion_anios ?? cot.recomendado?.retorno_anios ?? '—';
+
+  // Estimación de financiamiento solar a 48 meses (Tasa preferencial ~14% anual)
+  const costoMedio = (opt.costo_min && opt.costo_max) ? (opt.costo_min + opt.costo_max) / 2 : (opt.costo_min || 85000);
+  const mensualidadFinanciamiento = Math.round((costoMedio * 1.25) / 48);
+  const ahorroMes = opt.ahorro_mensual || 0;
+  const saldoNetoMes = ahorroMes - mensualidadFinanciamiento;
 
   const fmt = (n) => (n ? `$${Number(n).toLocaleString('es-MX', { minimumFractionDigits: 0 })}` : '—');
 
@@ -123,6 +130,19 @@ export default function ProposalScreen({ navigation, route }) {
 
           <View style={styles.divider} />
 
+          <Text style={styles.metricLabel}>FINANCIAMIENTO ESTIMADO (48 MESES)</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'baseline', marginBottom: 2 }}>
+            <Text style={[styles.metricLarge, { color: COLORS.navy }]}>{fmt(mensualidadFinanciamiento)}</Text>
+            <Text style={{ ...FONTS.bodySmall, color: COLORS.textMuted, marginLeft: 6 }}>/ mes</Text>
+          </View>
+          <Text style={styles.metricSub}>
+            {saldoNetoMes >= 0
+              ? `⚡ ¡El sistema se paga solo! Tu ahorro CFE (${fmt(ahorroMes)}) cubre tu mensualidad.`
+              : `Ahorras ${fmt(ahorroMes)}/mes en CFE para amortizar prácticamente toda tu cuota.`}
+          </Text>
+
+          <View style={styles.divider} />
+
           <Text style={styles.metricLabel}>AHORRO MENSUAL ESTIMADO</Text>
           <Text style={[styles.metricLarge, { color: COLORS.green }]}>{fmt(opt.ahorro_mensual)} MXN</Text>
           <Text style={styles.metricSub}>
@@ -174,13 +194,14 @@ export default function ProposalScreen({ navigation, route }) {
           style={styles.linkBtn}
           activeOpacity={0.7}
           onPress={() => {
+            const folio = cot.cotizacion_id ? `KS-${String(cot.cotizacion_id).padStart(5, '0')}` : `${deviceId || 999999}`;
             Alert.alert(
               'Solicitar Asesoría Técnica',
-              'Un ingeniero certificado de Kinich Solar revisará tu anteproyecto sin ningún compromiso. ¿Deseas confirmar la solicitud?',
+              'Un ingeniero certificado de Kinich Solar revisará tu anteproyecto sin ningún compromiso. ¿Deseas contactar a un asesor por WhatsApp?',
               [
                 { text: 'Cancelar', style: 'cancel' },
                 {
-                  text: 'Confirmar solicitud',
+                  text: 'Contactar por WhatsApp',
                   onPress: async () => {
                     try {
                       await solicitarAsesor({
@@ -193,17 +214,29 @@ export default function ProposalScreen({ navigation, route }) {
                           costo_promedio: opt.costo_promedio || opt.costo_min
                         }
                       });
-                      Alert.alert('Solicitud enviada', '¡Listo! Tu asesoría técnica ha sido registrada en el sistema. Nos pondremos en contacto contigo.');
-                    } catch (_) {
-                      Alert.alert('Solicitud registrada', 'Hemos tomado nota de tu solicitud de asesoría técnica.');
-                    }
+                    } catch (_) {}
+
+                    const msg = encodeURIComponent(
+                      `¡Hola Kinich Solar! ☀️ Acabo de cotizar en la app con el Folio ${folio}.\n` +
+                      `• Tarifa: ${tarifa}\n` +
+                      `• Sistema: ${opt.paneles} paneles (${opt.kwp} kWp)\n` +
+                      `• Ahorro estimado: ${fmt(opt.ahorro_mensual)}/mes\n\n` +
+                      `Me gustaría agendar una visita técnica sin costo.`
+                    );
+                    const whatsappUrl = `https://wa.me/529990000000?text=${msg}`;
+                    Linking.openURL(whatsappUrl).catch(() => {
+                      Alert.alert('Solicitud registrada', 'Hemos guardado tu solicitud. Un asesor se comunicará contigo.');
+                    });
                   }
                 }
               ]
             );
           }}
         >
-          <Text style={styles.linkText}>Solicitar visita técnica sin costo  ›</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+            <MaterialCommunityIcons name="whatsapp" size={20} color={COLORS.amber} style={{ marginRight: 6 }} />
+            <Text style={styles.linkText}>Solicitar visita técnica por WhatsApp  ›</Text>
+          </View>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>

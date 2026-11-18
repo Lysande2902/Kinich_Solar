@@ -115,7 +115,7 @@ export default function SimulatorScreen({ navigation, route }) {
           Alert.alert('Sin potencia detectada', 'No se pudo extraer la potencia de la placa. Ingresa manualmente.');
         }
       } catch {
-        Alert.alert('Error', 'No se pudo leer la placa. Verifica la conexión con el servidor.');
+        Alert.alert('Aviso del servicio', 'No fue posible procesar la placa en este momento. Por favor verifica tu conexión o intenta nuevamente.');
       } finally {
         setScanLoading(false);
       }

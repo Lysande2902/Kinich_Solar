@@ -9,6 +9,7 @@ import VerificationScreen from './src/screens/VerificationScreen';
 import ProposalScreen   from './src/screens/ProposalScreen';
 import SimulatorScreen  from './src/screens/SimulatorScreen';
 import HistoryScreen    from './src/screens/HistoryScreen';
+import QuickEstimateScreen from './src/screens/QuickEstimateScreen';
 
 const Stack = createStackNavigator();
 
@@ -21,6 +22,7 @@ export default function App() {
       >
         <Stack.Screen name="Welcome"      component={WelcomeScreen} />
         <Stack.Screen name="Capture"      component={CaptureScreen} />
+        <Stack.Screen name="QuickEstimate" component={QuickEstimateScreen} />
         <Stack.Screen name="Analyzing"    component={AnalyzingScreen} />
         <Stack.Screen name="Verification" component={VerificationScreen} />
         <Stack.Screen name="Proposal"     component={ProposalScreen} />

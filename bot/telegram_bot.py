@@ -554,11 +554,14 @@ async def botones(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif q.data == "asesor":
         recibo_id = context.user_data.get("recibo_id")
+        user = update.effective_user
         detalles = {
             "datos": context.user_data.get("datos"),
             "techo": context.user_data.get("techo"),
             "lat": context.user_data.get("lat"),
             "lon": context.user_data.get("lon"),
+            "username": f"@{user.username}" if user.username else None,
+            "nombre_completo": user.full_name,
             "ultima_cotizacion": context.user_data.get("ultima_cotizacion")
         }
         try:

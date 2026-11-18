@@ -132,6 +132,22 @@ export default function CaptureScreen({ navigation, route }) {
           <Feather name="chevron-right" size={22} color={COLORS.textMuted} />
         </TouchableOpacity>
 
+        {/* Opción rápida sin recibo */}
+        <TouchableOpacity
+          style={[styles.option, { borderColor: COLORS.amber, backgroundColor: '#FFFBEB' }]}
+          onPress={() => navigation.navigate('QuickEstimate', { deviceId })}
+          activeOpacity={0.8}
+        >
+          <View style={[styles.icon, { backgroundColor: '#FDE68A' }]}>
+            <MaterialCommunityIcons name="calculator-variant" size={24} color="#B45309" />
+          </View>
+          <View style={styles.optionText}>
+            <Text style={[styles.optionTitle, { color: '#B45309' }]}>¿No tienes tu recibo a la mano?</Text>
+            <Text style={styles.optionDesc}>Cotiza en 10 segundos con lo que pagas al bimestre.</Text>
+          </View>
+          <Feather name="chevron-right" size={22} color="#B45309" />
+        </TouchableOpacity>
+
         <View style={styles.note}>
           <Feather name="shield" size={14} color={COLORS.textMuted} style={{ marginRight: 8, marginTop: 2 }} />
           <Text style={styles.noteText}>
