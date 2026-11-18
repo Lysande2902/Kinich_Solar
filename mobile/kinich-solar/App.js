@@ -8,6 +8,7 @@ import AnalyzingScreen  from './src/screens/AnalyzingScreen';
 import VerificationScreen from './src/screens/VerificationScreen';
 import ProposalScreen   from './src/screens/ProposalScreen';
 import SimulatorScreen  from './src/screens/SimulatorScreen';
+import HistoryScreen    from './src/screens/HistoryScreen';
 
 const Stack = createStackNavigator();
 
@@ -24,6 +25,7 @@ export default function App() {
         <Stack.Screen name="Verification" component={VerificationScreen} />
         <Stack.Screen name="Proposal"     component={ProposalScreen} />
         <Stack.Screen name="Simulator"    component={SimulatorScreen} />
+        <Stack.Screen name="History"      component={HistoryScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

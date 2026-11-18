@@ -8,7 +8,7 @@ import * as Sharing from 'expo-sharing';
 import { COLORS, FONTS, SHADOW } from '../constants/theme';
 import ScaleSelector from '../components/ScaleSelector';
 import SemaphoreCard from '../components/SemaphoreCard';
-import { BASE_API_URL, solicitarAsesor } from '../api/client';
+import { getServerUrl, solicitarAsesor } from '../api/client';
 
 export default function ProposalScreen({ navigation, route }) {
   const { cotizacion = {}, deviceId, tarifa: tarifaParam, cotizacionAjustada } = route.params || {};
@@ -31,10 +31,12 @@ export default function ProposalScreen({ navigation, route }) {
   const handleDescargarPdf = async () => {
     try {
       setDownloading(true);
-      const targetUri = `${FileSystem.documentDirectory}Kinich_Solar_Propuesta_${deviceId || 999999}.pdf`;
+      const serverUrl = await getServerUrl();
+      const folio = cot.cotizacion_id ? `KS-${String(cot.cotizacion_id).padStart(5, '0')}` : `${deviceId || 999999}`;
+      const targetUri = `${FileSystem.documentDirectory}Propuesta_Kinich_Solar_${folio}.pdf`;
 
       const downloadRes = await FileSystem.downloadAsync(
-        `${BASE_API_URL}/api/v1/generar-pdf`,
+        `${serverUrl}/api/v1/generar-pdf`,
         targetUri,
         {
           headers: { 'Content-Type': 'application/json' },

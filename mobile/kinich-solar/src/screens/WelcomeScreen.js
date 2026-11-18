@@ -59,13 +59,22 @@ export default function WelcomeScreen({ navigation }) {
               <Text style={styles.brandSub}>ENERGÍA SOLAR · YUCATÁN</Text>
             </View>
           </View>
-          <TouchableOpacity
-            style={styles.settingsBtn}
-            onPress={() => setModalVisible(true)}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.settingsIcon}>⚙️</Text>
-          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            <TouchableOpacity
+              style={styles.settingsBtn}
+              onPress={() => navigation.navigate('History', { deviceId: DEVICE_ID })}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.settingsIcon}>📂</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.settingsBtn}
+              onPress={() => setModalVisible(true)}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.settingsIcon}>⚙️</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Tagline */}

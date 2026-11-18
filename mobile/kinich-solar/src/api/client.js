@@ -74,6 +74,12 @@ export const cotizar = (payload) =>
 export const solicitarAsesor = (payload) =>
   client.post('/api/v1/contacto-asesor', payload, { timeout: 30000 });
 
+export const obtenerHistorial = (telegramId) =>
+  client.get(`/api/v1/historial/${telegramId}`, { timeout: 15000 });
+
+export const borrarDatos = (telegramId) =>
+  client.delete(`/api/v1/borrar-datos/${telegramId}`, { timeout: 15000 });
+
 export const generarPdf = (cotizacion, telegramId) =>
   client.post(
     '/api/v1/generar-pdf',

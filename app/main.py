@@ -335,9 +335,9 @@ def vista_panel(_=Depends(_autenticar_admin)):
 
     filas_html = ""
     for f in filas:
-        asesor_badge = "<span style='color:green;font-weight:bold'>SÍ</span>" if f["contacto_asesor"] else "No"
+        asesor_badge = "<span style='background:#dcfce7;color:#166534;padding:3px 8px;border-radius:6px;font-weight:700;'>SÍ</span>" if f["contacto_asesor"] else "<span style='color:#94a3b8;'>No</span>"
         filas_html += f"""
-        <tr>
+        <tr class="data-row">
             <td>{f['creado_en']}</td>
             <td>{f['telegram_id']}</td>
             <td>{f['kwh_periodo']}</td>
@@ -358,21 +358,32 @@ def vista_panel(_=Depends(_autenticar_admin)):
     <title>Panel de Cotizaciones — Kinich Solar</title>
     <style>
         body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 2rem; background: #f8fafc; color: #1e293b; }}
-        h1 {{ color: #0f172a; display: flex; align-items: center; gap: 0.5rem; }}
+        .header {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }}
+        h1 {{ color: #0f172a; margin: 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1.75rem; }}
+        .actions {{ display: flex; gap: 0.75rem; align-items: center; }}
+        .search-box {{ padding: 8px 14px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; width: 260px; }}
+        .btn-export {{ background: #182b49; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; text-decoration: none; font-size: 14px; }}
+        .btn-export:hover {{ background: #1e3a5f; }}
         table {{ width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }}
-        th, td {{ padding: 12px 16px; text-align: left; border-bottom: 1px solid #e2e8f0; }}
+        th, td {{ padding: 12px 16px; text-align: left; border-bottom: 1px solid #e2e8f0; font-size: 14px; }}
         th {{ background-color: #f1f5f9; font-weight: 600; color: #475569; }}
         tr:hover {{ background-color: #f8fafc; }}
         .badge {{ background: #fef3c7; color: #92400e; padding: 4px 8px; border-radius: 4px; font-size: 0.875rem; }}
     </style>
 </head>
 <body>
-    <h1>☀️ Kinich Solar <span class="badge">Panel Asesores (Últimos 30 días)</span></h1>
-    <table>
+    <div class="header">
+        <h1>☀️ Kinich Solar <span class="badge">Panel Asesores (Últimos 30 días)</span></h1>
+        <div class="actions">
+            <input type="text" id="searchInput" class="search-box" placeholder="Buscar por ID o Tarifa..." onkeyup="filtrarTabla()">
+            <button class="btn-export" onclick="exportarCSV()">📥 Descargar CSV</button>
+        </div>
+    </div>
+    <table id="tablaCotizaciones">
         <thead>
             <tr>
                 <th>Fecha</th>
-                <th>Telegram ID</th>
+                <th>Usuario ID</th>
                 <th>Consumo (kWh)</th>
                 <th>Tarifa</th>
                 <th>Paneles</th>
@@ -387,6 +398,36 @@ def vista_panel(_=Depends(_autenticar_admin)):
             {filas_html or "<tr><td colspan='10' style='text-align:center;'>No hay cotizaciones registradas aún.</td></tr>"}
         </tbody>
     </table>
+
+    <script>
+        function filtrarTabla() {{
+            const input = document.getElementById("searchInput").value.toUpperCase();
+            const filas = document.querySelectorAll(".data-row");
+            filas.forEach(f => {{
+                const texto = f.innerText.toUpperCase();
+                f.style.display = texto.includes(input) ? "" : "none";
+            }});
+        }}
+
+        function exportarCSV() {{
+            let csv = [];
+            const filas = document.querySelectorAll("table tr");
+            filas.forEach(f => {{
+                let cols = [];
+                f.querySelectorAll("th, td").forEach(c => {{
+                    cols.push('"' + c.innerText.replace(/"/g, '""') + '"');
+                }});
+                csv.push(cols.join(","));
+            }});
+            const blob = new Blob([csv.join("\n")], {{ type: "text/csv;charset=utf-8;" }});
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.setAttribute("download", "Cotizaciones_Kinich_Solar.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }}
+    </script>
 </body>
 </html>
 """

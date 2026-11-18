@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
   SafeAreaView, StatusBar, TextInput, Alert,
 } from 'react-native';
+import * as Location from 'expo-location';
 import { COLORS, FONTS, SHADOW } from '../constants/theme';
 import { cotizar } from '../api/client';
 
@@ -25,6 +26,21 @@ export default function VerificationScreen({ navigation, route }) {
   const [shade, setShade] = useState('Sin sombra');
   const [ori, setOri] = useState('Sur');
   const [loading, setLoading] = useState(false);
+  const [coords, setCoords] = useState(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status === 'granted') {
+          const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+          if (loc?.coords) {
+            setCoords({ lat: loc.coords.latitude, lon: loc.coords.longitude });
+          }
+        }
+      } catch (_) {}
+    })();
+  }, []);
 
   const handleCalculate = async () => {
     if (!kwh || !total) {
@@ -42,6 +58,8 @@ export default function VerificationScreen({ navigation, route }) {
         telegram_id: deviceId || 999999,
         sombra: SHADE_MAP[shade],
         orientacion: ORI_MAP[ori],
+        lat: coords?.lat || null,
+        lon: coords?.lon || null,
       };
       const res = await cotizar(payload);
       navigation.navigate('Proposal', { cotizacion: res.data, deviceId, tarifa });
