@@ -200,6 +200,18 @@ export default function ProposalScreen({ navigation, route }) {
           <Text style={styles.btnSecondaryText}>Simular equipo adicional  +</Text>
         </TouchableOpacity>
 
+        {/* Acceso a la Guía Solar */}
+        <TouchableOpacity
+          style={[styles.btnSecondary, { borderColor: COLORS.border, backgroundColor: COLORS.bgSoft, marginBottom: 12 }]}
+          onPress={() => navigation.navigate('Guide')}
+          activeOpacity={0.85}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Feather name="book-open" size={16} color={COLORS.navy} style={{ marginRight: 8 }} />
+            <Text style={[styles.btnSecondaryText, { color: COLORS.navy, fontSize: 13 }]}>Aprende cómo funciona tu sistema solar</Text>
+          </View>
+        </TouchableOpacity>
+
         <TouchableOpacity
           style={styles.linkBtn}
           activeOpacity={0.7}

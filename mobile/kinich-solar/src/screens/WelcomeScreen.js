@@ -61,6 +61,13 @@ export default function WelcomeScreen({ navigation }) {
           <View style={{ flexDirection: 'row', gap: 8 }}>
             <TouchableOpacity
               style={styles.settingsBtn}
+              onPress={() => navigation.navigate('Guide')}
+              activeOpacity={0.7}
+            >
+              <Feather name="book-open" size={18} color={COLORS.navy} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.settingsBtn}
               onPress={() => navigation.navigate('History', { deviceId: DEVICE_ID })}
               activeOpacity={0.7}
             >
