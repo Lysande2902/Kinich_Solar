@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, TextInput,
-  StyleSheet, SafeAreaView, StatusBar, Modal, Alert
+  StyleSheet, SafeAreaView, StatusBar, Modal, Alert, Image,
 } from 'react-native';
 import { MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { COLORS, FONTS, SHADOW, SHADOW_LG } from '../constants/theme';
@@ -50,9 +50,11 @@ export default function WelcomeScreen({ navigation }) {
         {/* Cabecera Premium */}
         <View style={styles.header}>
           <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-            <View style={styles.logoBox}>
-              <MaterialCommunityIcons name="solar-power-variant" size={28} color={COLORS.amber} />
-            </View>
+            <Image
+              source={require('../../assets/logo.jpg')}
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
             <View>
               <Text style={styles.brand}>Kinich Solar</Text>
               <Text style={styles.brandSub}>INGENIERÍA FOTOVOLTAICA · YUCATÁN</Text>
@@ -236,10 +238,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row', justifyContent: 'space-between',
     alignItems: 'center', marginBottom: 20,
   },
-  logoBox: {
-    width: 44, height: 44, borderRadius: 12,
-    backgroundColor: COLORS.navy, alignItems: 'center',
-    justifyContent: 'center', marginRight: 12, ...SHADOW,
+  logoImage: {
+    width: 46, height: 46, borderRadius: 12,
+    marginRight: 12,
   },
   brand: { ...FONTS.h2, color: COLORS.navy, fontSize: 20 },
   brandSub: { ...FONTS.label, color: COLORS.amber, fontSize: 9 },
