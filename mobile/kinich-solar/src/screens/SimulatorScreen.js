@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
-  SafeAreaView, StatusBar, Alert,
+  SafeAreaView, StatusBar, Alert, TextInput,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { MaterialCommunityIcons, Feather } from '@expo/vector-icons';
@@ -11,17 +11,26 @@ import { leerPlaca } from '../api/client';
 const APPLIANCES = [
   { key: 'minisplit_inv', label: 'Mini-split inverter', icon: 'snowflake', iconLib: 'mci' },
   { key: 'minisplit_std', label: 'A/C tradicional', icon: 'air-conditioner', iconLib: 'mci' },
+  { key: 'refrigerador', label: 'Refrigerador', icon: 'fridge-outline', iconLib: 'mci' },
+  { key: 'lavadora', label: 'Lavadora', icon: 'washing-machine', iconLib: 'mci' },
+  { key: 'calentador', label: 'Calentador agua', icon: 'water-boiler', iconLib: 'mci' },
   { key: 'ev', label: 'Auto eléctrico', icon: 'car-electric-outline', iconLib: 'mci' },
   { key: 'pump', label: 'Bomba de agua', icon: 'water-pump', iconLib: 'mci' },
+  { key: 'custom', label: 'Otro equipo', icon: 'plus-circle-outline', iconLib: 'mci' },
 ];
 
 const CAPACITIES = ['1.0 ton', '1.5 ton', '2.0 ton'];
 
+// kWh por hora de uso (minisplit) o kWh promedio/hora equivalente para los demás
 const KWH_TABLE = {
   minisplit_inv: { '1.0 ton': 0.9, '1.5 ton': 1.1, '2.0 ton': 1.4 },
   minisplit_std: { '1.0 ton': 1.4, '1.5 ton': 1.8, '2.0 ton': 2.4 },
-  ev: { '1.0 ton': 7.0, '1.5 ton': 9.0, '2.0 ton': 12.0 },
-  pump: { '1.0 ton': 1.0, '1.5 ton': 1.5, '2.0 ton': 2.0 },
+  refrigerador:  { '1.0 ton': 0.10, '1.5 ton': 0.15, '2.0 ton': 0.20 },
+  lavadora:      { '1.0 ton': 0.40, '1.5 ton': 0.50, '2.0 ton': 0.60 },
+  calentador:    { '1.0 ton': 1.2,  '1.5 ton': 1.5,  '2.0 ton': 2.0  },
+  ev:            { '1.0 ton': 7.0,  '1.5 ton': 9.0,  '2.0 ton': 12.0 },
+  pump:          { '1.0 ton': 1.0,  '1.5 ton': 1.5,  '2.0 ton': 2.0  },
+  custom:        { '1.0 ton': 1.0,  '1.5 ton': 1.0,  '2.0 ton': 1.0  },
 };
 
 const PANELS_PER_KW = 2.0;
@@ -33,15 +42,18 @@ export default function SimulatorScreen({ navigation, route }) {
   const [hours, setHours] = useState(8);
   const [scanLoading, setScanLoading] = useState(false);
   const [scannedKw, setScannedKw] = useState(null);
+  const [customWatts, setCustomWatts] = useState('');
 
   const baseKwh = cotizacion.kwh_mes || 0;
   const baseKwp = cotizacion.recomendado?.kwp || 0;
   const basePaneles = cotizacion.recomendado?.paneles || 0;
   const baseAhorro = cotizacion.recomendado?.ahorro_mensual || 0;
 
-  const kwhPerHr = scannedKw
-    ? scannedKw
-    : (KWH_TABLE[appliance]?.[capacity] || 1.1);
+  const kwhPerHr = appliance === 'custom' && customWatts && !isNaN(parseFloat(customWatts))
+    ? parseFloat(customWatts) / 1000
+    : scannedKw
+      ? scannedKw
+      : (KWH_TABLE[appliance]?.[capacity] || 1.1);
 
   const addedKwhMonth = Math.round(kwhPerHr * hours * 30);
   const addedPanels = Math.max(1, Math.ceil((addedKwhMonth / 30 / 4.5) * PANELS_PER_KW));
@@ -151,7 +163,7 @@ export default function SimulatorScreen({ navigation, route }) {
             <TouchableOpacity
               key={a.key}
               style={[styles.appBtn, appliance === a.key && styles.appBtnActive]}
-              onPress={() => { setAppliance(a.key); setScannedKw(null); }}
+              onPress={() => { setAppliance(a.key); setScannedKw(null); setCustomWatts(''); }}
               activeOpacity={0.8}
             >
               <View style={styles.appIcon}>
@@ -202,6 +214,25 @@ export default function SimulatorScreen({ navigation, route }) {
           </>
         )}
 
+        {/* Campo de wattaje para "Otro equipo" */}
+        {appliance === 'custom' && (
+          <View style={styles.customBlock}>
+            <Text style={styles.sectionLabel}>Wattaje del equipo (W)</Text>
+            <TextInput
+              style={styles.customInput}
+              value={customWatts}
+              onChangeText={setCustomWatts}
+              keyboardType="numeric"
+              placeholder="Ej. 800"
+              placeholderTextColor="#94A3B8"
+              selectTextOnFocus
+            />
+            <Text style={styles.customHint}>
+              Escribe el consumo en Watts del equipo. Lo encontrarás en su placa técnica o etiqueta energética.
+            </Text>
+          </View>
+        )}
+
         {/* Horas */}
         <View style={styles.hoursHeader}>
           <Text style={styles.sectionLabel}>Horas de uso al día</Text>
@@ -211,7 +242,7 @@ export default function SimulatorScreen({ navigation, route }) {
 
         {/* Escanear placa */}
         <TouchableOpacity style={styles.scanBtn} onPress={scanPlate} activeOpacity={0.8}>
-          <Text style={styles.scanIcon}>📸</Text>
+          <MaterialCommunityIcons name="camera" size={24} color={COLORS.amber} style={{ marginRight: 12 }} />
           <View style={{ flex: 1 }}>
             <Text style={styles.scanTitle}>Escanear placa técnica</Text>
             <Text style={styles.scanSub}>
@@ -341,4 +372,12 @@ const styles = StyleSheet.create({
   updateText: { ...FONTS.h3, color: COLORS.white },
   cancelBtn: { alignItems: 'center', paddingVertical: 10 },
   cancelText: { ...FONTS.body, color: COLORS.textMuted },
+  customBlock: { backgroundColor: COLORS.bgSoft, borderRadius: 12, padding: 14, marginBottom: 8 },
+  customInput: {
+    ...FONTS.h2, color: COLORS.textPrimary,
+    borderWidth: 1.5, borderColor: COLORS.amber,
+    borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10,
+    marginBottom: 6,
+  },
+  customHint: { ...FONTS.bodySmall, color: COLORS.textMuted, lineHeight: 16 },
 });

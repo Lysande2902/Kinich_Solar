@@ -4,12 +4,15 @@ import {
   SafeAreaView, StatusBar, TextInput, Alert,
 } from 'react-native';
 import * as Location from 'expo-location';
+import { Feather } from '@expo/vector-icons';
 import { COLORS, FONTS, SHADOW } from '../constants/theme';
 import { cotizar } from '../api/client';
 
 const ROOF_OPTS = ['Losa de concreto', 'Lámina metálica', 'Teja de barro', 'No estoy seguro'];
 const SHADE_OPTS = ['Sin sombra', 'Parcial', 'Alta'];
 const ORI_OPTS = ['Sur', 'Sureste / Suroeste', 'Este u Oeste', 'Norte'];
+// Tarifas residenciales CFE disponibles para selección manual
+const TARIFAS_OPTS = ['1', '1A', '1B', '1C', '1D', '1E', '1F', 'DAC'];
 
 const SHADE_MAP = { 'Sin sombra': 'ninguna', Parcial: 'parcial', Alta: 'alta' };
 const ORI_MAP = { Sur: 'sur', 'Sureste / Suroeste': 'sureste', 'Este u Oeste': 'este', Norte: 'norte' };
@@ -128,13 +131,43 @@ export default function VerificationScreen({ navigation, route }) {
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.fieldLabel}>TARIFA DETECTADA</Text>
-              <Text style={styles.bigValue}>{tarifa}</Text>
+              <View style={styles.tarifaChips}>
+                {TARIFAS_OPTS.map((t) => (
+                  <TouchableOpacity
+                    key={t}
+                    style={[styles.tarifaChip, tarifa === t && styles.tarifaChipActive]}
+                    onPress={() => setTarifa(t)}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={[styles.tarifaChipText, tarifa === t && styles.tarifaChipTextActive]}>
+                      {t}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
             </View>
           </View>
           <View style={[styles.row2, { marginTop: 12 }]}>
             <View style={{ flex: 1, marginRight: 8 }}>
               <Text style={styles.fieldLabel}>PERÍODO FACTURADO</Text>
-              <Text style={styles.fieldValue}>{inicio || '—'} · {fin || '—'}</Text>
+              <TextInput
+                style={styles.dateInput}
+                value={inicio}
+                onChangeText={setInicio}
+                placeholder="Inicio AAAA-MM-DD"
+                placeholderTextColor="#64748B"
+                keyboardType="default"
+                selectTextOnFocus
+              />
+              <TextInput
+                style={[styles.dateInput, { marginTop: 4 }]}
+                value={fin}
+                onChangeText={setFin}
+                placeholder="Fin AAAA-MM-DD"
+                placeholderTextColor="#64748B"
+                keyboardType="default"
+                selectTextOnFocus
+              />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.fieldLabel}>TOTAL PAGADO</Text>
@@ -142,7 +175,7 @@ export default function VerificationScreen({ navigation, route }) {
               <Text style={styles.unit}>MXN</Text>
             </View>
           </View>
-          <Text style={styles.editHint}>Corrige cualquier dato que no coincida con tu recibo mensual.</Text>
+          <Text style={styles.editHint}>Todos los campos son editables: corrige consumo, tarifa, fechas y total si la IA no los leyó bien.</Text>
         </View>
 
         {/* Sección B */}
@@ -254,4 +287,17 @@ const styles = StyleSheet.create({
   btnLoading: { backgroundColor: '#475569' },
   btnText: { ...FONTS.h3, color: COLORS.white },
   footNote: { ...FONTS.label, color: COLORS.textMuted, textAlign: 'center', marginTop: 10, fontSize: 10 },
+  tarifaChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 2 },
+  tarifaChip: {
+    paddingHorizontal: 7, paddingVertical: 3, borderRadius: 6,
+    borderWidth: 1, borderColor: '#475569', marginBottom: 2,
+  },
+  tarifaChipActive: { backgroundColor: COLORS.amber, borderColor: COLORS.amber },
+  tarifaChipText: { ...FONTS.label, color: '#94A3B8', fontSize: 11 },
+  tarifaChipTextActive: { color: COLORS.navy, fontWeight: '700' },
+  dateInput: {
+    ...FONTS.bodySmall, color: COLORS.white,
+    borderBottomWidth: 1, borderBottomColor: '#475569',
+    paddingVertical: 2, minWidth: 90,
+  },
 });
