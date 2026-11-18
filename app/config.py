@@ -12,6 +12,8 @@ class Settings(BaseSettings):
     # Clave secreta para firmar tokens de sesión del panel (HMAC-SHA256)
     # En producción debe definirse en .env con un valor aleatorio de 32+ bytes
     PANEL_SECRET_KEY: str = "kinich-solar-panel-secret-2026-dev-only"
+    MONGO_URI: str = "mongodb://localhost:27017"
+    MONGO_DB_NAME: str = "Kinich"
 
     model_config = SettingsConfigDict(
         env_file=".env",

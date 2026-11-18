@@ -21,6 +21,7 @@ from .schemas import (
     DatosRecibo
 )
 from .privacidad import registrar_consentimiento, tiene_consentimiento, registrar_auditoria
+from .mongo_client import mongo
 from .lector_recibo import obtener_lector
 from .cotizador import cotizar
 from .generador_pdf import generar_ficha_tecnica_pdf
@@ -98,6 +99,7 @@ def endpoint_consentimiento(s: SolicitudConsentimiento):
     with get_db() as db:
         if s.consentimiento:
             registrar_consentimiento(db, s.telegram_id, s.version_aviso)
+            mongo.registrar_cliente(s.telegram_id, 1, s.version_aviso)
             return {"status": "ok", "mensaje": "Consentimiento registrado exitosamente"}
         return {"status": "ok", "mensaje": "Consentimiento no otorgado"}
 
@@ -223,6 +225,24 @@ def endpoint_cotizar(s: SolicitudCotizar):
 
         resultado["cotizacion_id"] = cotizacion_id
         resultado["recibo_id"] = recibo_id
+
+        # Persistencia en MongoDB para visualización en Compass
+        try:
+            mongo.registrar_cotizacion(
+                telegram_id=s.telegram_id,
+                recibo_data={
+                    "kwh_periodo": s.kwh_periodo,
+                    "tarifa": s.tarifa,
+                    "total_pagar": s.total_pagar,
+                    "periodo_inicio": s.periodo_inicio,
+                    "periodo_fin": s.periodo_fin,
+                    "modelo_lector": lector.nombre
+                },
+                cotizacion_data=resultado
+            )
+        except Exception:
+            pass
+
         return resultado
 
 @app.post("/api/v1/contacto-asesor")
@@ -247,6 +267,7 @@ def endpoint_contacto_asesor(s: SolicitudContactoAsesor):
             "recibo_id": s.recibo_id,
             "detalles": s.detalles
         })
+    mongo.marcar_contacto_asesor(s.telegram_id, s.detalles)
     return {"status": "ok", "mensaje": "Contacto con asesor registrado con perfil completo."}
 
 @app.post("/api/v1/feedback")
@@ -325,6 +346,7 @@ def endpoint_borrar_datos(telegram_id: int):
             db.execute("DELETE FROM recibos WHERE cliente_id = ?", (cid,))
             db.execute("DELETE FROM clientes WHERE id = ?", (cid,))
             registrar_auditoria(db, "DATOS_BORRADOS_ARCO", {"telegram_id": telegram_id})
+            mongo.borrar_datos_arco(telegram_id)
             return {"status": "ok", "mensaje": "Todos tus registros han sido eliminados conforme a la política de privacidad."}
         return {"status": "ok", "mensaje": "No se encontraron registros asociados a este usuario."}
 
