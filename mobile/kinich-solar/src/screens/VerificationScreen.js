@@ -14,7 +14,7 @@ const SHADE_MAP = { 'Sin sombra': 'ninguna', Parcial: 'parcial', Alta: 'alta' };
 const ORI_MAP = { Sur: 'sur', 'Sureste / Suroeste': 'sureste', 'Este u Oeste': 'este', Norte: 'norte' };
 
 export default function VerificationScreen({ navigation, route }) {
-  const { datos = {}, deviceId } = route.params || {};
+  const { datos = {}, deviceId, esManual = false } = route.params || {};
 
   const [kwh, setKwh] = useState(String(datos.kwh_periodo || ''));
   const [tarifa, setTarifa] = useState(datos.tarifa || '1C');
@@ -95,7 +95,11 @@ export default function VerificationScreen({ navigation, route }) {
         {/* Sección A */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionLabel}>A · DATOS DEL RECIBO</Text>
-          <View style={styles.confBadge}><Text style={styles.confText}>✓ ALTA CONFIANZA</Text></View>
+          <View style={[styles.confBadge, esManual && { backgroundColor: '#FEF3C7' }]}>
+            <Text style={[styles.confText, esManual && { color: COLORS.amberWarn }]}>
+              {esManual ? '✎ CAPTURA MANUAL' : '✓ LECTURA AUTOMÁTICA'}
+            </Text>
+          </View>
         </View>
         <View style={styles.card}>
           <View style={styles.row2}>

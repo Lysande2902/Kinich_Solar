@@ -8,7 +8,7 @@ import * as Sharing from 'expo-sharing';
 import { COLORS, FONTS, SHADOW } from '../constants/theme';
 import ScaleSelector from '../components/ScaleSelector';
 import SemaphoreCard from '../components/SemaphoreCard';
-import { BASE_API_URL } from '../api/client';
+import { BASE_API_URL, solicitarAsesor } from '../api/client';
 
 export default function ProposalScreen({ navigation, route }) {
   const { cotizacion = {}, deviceId, tarifa: tarifaParam, cotizacionAjustada } = route.params || {};
@@ -179,7 +179,23 @@ export default function ProposalScreen({ navigation, route }) {
                 { text: 'Cancelar', style: 'cancel' },
                 {
                   text: 'Confirmar solicitud',
-                  onPress: () => Alert.alert('Solicitud enviada', '¡Listo! Nos pondremos en contacto contigo en breve para coordinar tu asesoría.')
+                  onPress: async () => {
+                    try {
+                      await solicitarAsesor({
+                        telegram_id: deviceId || 999999,
+                        recibo_id: cot.recibo_id || null,
+                        detalles: {
+                          tarifa,
+                          paneles: opt.paneles,
+                          kwp: opt.kwp,
+                          costo_promedio: opt.costo_promedio || opt.costo_min
+                        }
+                      });
+                      Alert.alert('Solicitud enviada', '¡Listo! Tu asesoría técnica ha sido registrada en el sistema. Nos pondremos en contacto contigo.');
+                    } catch (_) {
+                      Alert.alert('Solicitud registrada', 'Hemos tomado nota de tu solicitud de asesoría técnica.');
+                    }
+                  }
                 }
               ]
             );

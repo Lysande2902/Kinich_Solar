@@ -20,10 +20,23 @@ export default function CaptureScreen({ navigation, route }) {
       navigation.navigate('Verification', { datos: res.data, deviceId });
     } catch (err) {
       navigation.goBack();
-      const msg =
-        err?.response?.data?.detail ||
-        'No pudimos leer el recibo. Asegúrate de que la imagen esté bien iluminada y sea legible.';
-      Alert.alert('Error de lectura', msg);
+      Alert.alert(
+        'Lectura no concluyente',
+        'La imagen no fue lo suficientemente clara para extraer todos los datos automáticamente. ¿Deseas capturar las cifras manualmente?',
+        [
+          { text: 'Tomar otra foto', style: 'cancel' },
+          {
+            text: 'Ingresar datos a mano',
+            onPress: () => {
+              navigation.navigate('Verification', {
+                datos: { kwh_periodo: '', tarifa: '1C', total_pagar: '' },
+                deviceId,
+                esManual: true
+              });
+            }
+          }
+        ]
+      );
     } finally {
       setLoading(false);
     }

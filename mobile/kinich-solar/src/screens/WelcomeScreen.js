@@ -1,16 +1,35 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, SafeAreaView, StatusBar,
+  View, Text, ScrollView, TouchableOpacity, TextInput,
+  StyleSheet, SafeAreaView, StatusBar, Modal, Alert
 } from 'react-native';
 import { COLORS, FONTS, SHADOW } from '../constants/theme';
-import { registrarConsentimiento } from '../api/client';
+import { registrarConsentimiento, getServerUrl, setServerUrl } from '../api/client';
 
 const DEVICE_ID = Math.floor(Math.random() * 999999);
 
 export default function WelcomeScreen({ navigation }) {
   const [accepted, setAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [currentUrl, setCurrentUrl] = useState('');
+  const [inputUrl, setInputUrl] = useState('');
+
+  useEffect(() => {
+    (async () => {
+      const url = await getServerUrl();
+      setCurrentUrl(url);
+      setInputUrl(url);
+    })();
+  }, []);
+
+  const handleSaveUrl = async () => {
+    if (!inputUrl.trim()) return;
+    const updated = await setServerUrl(inputUrl);
+    setCurrentUrl(updated);
+    setModalVisible(false);
+    Alert.alert('Servidor actualizado', `Conectando ahora a: ${updated}`);
+  };
 
   const handleStart = async () => {
     if (!accepted) return;
@@ -29,15 +48,24 @@ export default function WelcomeScreen({ navigation }) {
       <StatusBar barStyle="light-content" backgroundColor={COLORS.navy} />
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
-        {/* Cabecera */}
+        {/* Cabecera con botón de Ajustes de Conexión */}
         <View style={styles.header}>
-          <View style={styles.logoBox}>
-            <Text style={styles.logoIcon}>☀️</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+            <View style={styles.logoBox}>
+              <Text style={styles.logoIcon}>☀️</Text>
+            </View>
+            <View>
+              <Text style={styles.brand}>Kinich Solar</Text>
+              <Text style={styles.brandSub}>ENERGÍA SOLAR · YUCATÁN</Text>
+            </View>
           </View>
-          <View>
-            <Text style={styles.brand}>Kinich Solar</Text>
-            <Text style={styles.brandSub}>ENERGÍA SOLAR · YUCATÁN</Text>
-          </View>
+          <TouchableOpacity
+            style={styles.settingsBtn}
+            onPress={() => setModalVisible(true)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.settingsIcon}>⚙️</Text>
+          </TouchableOpacity>
         </View>
 
         {/* Tagline */}
@@ -49,6 +77,19 @@ export default function WelcomeScreen({ navigation }) {
           Dimensionamos tu sistema con el consumo real de tu recibo CFE y las tarifas vigentes de la
           península. Sin promesas de costo cero, con números verificables.
         </Text>
+
+        {/* Indicador de IP de servidor */}
+        <TouchableOpacity
+          style={styles.serverPill}
+          onPress={() => setModalVisible(true)}
+          activeOpacity={0.8}
+        >
+          <View style={styles.serverDot} />
+          <Text style={styles.serverText} numberOfLines={1}>
+            API: {currentUrl}
+          </Text>
+          <Text style={styles.serverEdit}>Cambiar</Text>
+        </TouchableOpacity>
 
         {/* Tarjeta de privacidad */}
         <View style={styles.privacyCard}>
@@ -105,6 +146,46 @@ export default function WelcomeScreen({ navigation }) {
           cotización vinculante.
         </Text>
       </ScrollView>
+
+      {/* Modal de Configuración de Servidor */}
+      <Modal
+        visible={modalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Ajustes de Conexión</Text>
+            <Text style={styles.modalDesc}>
+              Indica la dirección IP de tu computadora o túnel donde corre el backend FastAPI:
+            </Text>
+            <TextInput
+              style={styles.modalInput}
+              value={inputUrl}
+              onChangeText={setInputUrl}
+              placeholder="http://192.168.1.XX:8000"
+              placeholderTextColor="#64748B"
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={styles.modalBtnCancel}
+                onPress={() => setModalVisible(false)}
+              >
+                <Text style={styles.modalBtnCancelText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalBtnSave}
+                onPress={handleSaveUrl}
+              >
+                <Text style={styles.modalBtnSaveText}>Guardar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -112,7 +193,7 @@ export default function WelcomeScreen({ navigation }) {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.navy },
   scroll: { paddingHorizontal: 24, paddingBottom: 40, paddingTop: 20 },
-  header: { flexDirection: 'row', alignItems: 'center', marginBottom: 28 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 },
   logoBox: {
     width: 44, height: 44, borderRadius: 10,
     backgroundColor: COLORS.amberLight,
@@ -121,9 +202,24 @@ const styles = StyleSheet.create({
   logoIcon: { fontSize: 22 },
   brand: { ...FONTS.h3, color: COLORS.white },
   brandSub: { ...FONTS.label, color: COLORS.textMuted, fontSize: 10 },
+  settingsBtn: {
+    width: 38, height: 38, borderRadius: 19,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  settingsIcon: { fontSize: 18 },
   tag: { ...FONTS.label, color: COLORS.amber, fontSize: 11, marginBottom: 10 },
   h1: { ...FONTS.h1, color: COLORS.white, marginBottom: 14 },
-  desc: { ...FONTS.body, color: '#94A3B8', marginBottom: 28, lineHeight: 22 },
+  desc: { ...FONTS.body, color: '#94A3B8', marginBottom: 20, lineHeight: 22 },
+  serverPill: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8,
+    marginBottom: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
+  },
+  serverDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: COLORS.green, marginRight: 8 },
+  serverText: { ...FONTS.bodySmall, color: '#CBD5E1', flex: 1 },
+  serverEdit: { ...FONTS.label, color: COLORS.amberLight, fontSize: 10, marginLeft: 8 },
   privacyCard: {
     backgroundColor: COLORS.cardNavy, borderRadius: 14,
     padding: 18, marginBottom: 24, borderWidth: 1, borderColor: COLORS.borderDark,
@@ -153,4 +249,28 @@ const styles = StyleSheet.create({
   btnDisabled: { backgroundColor: '#334155' },
   btnText: { ...FONTS.h3, color: COLORS.navy },
   disclaimer: { ...FONTS.bodySmall, color: '#475569', textAlign: 'center', lineHeight: 17 },
+  modalOverlay: {
+    flex: 1, backgroundColor: 'rgba(0,0,0,0.7)',
+    justifyContent: 'center', alignItems: 'center', padding: 24,
+  },
+  modalCard: {
+    width: '100%', backgroundColor: COLORS.navy, borderRadius: 16,
+    padding: 24, borderWidth: 1, borderColor: COLORS.borderDark, ...SHADOW,
+  },
+  modalTitle: { ...FONTS.h2, color: COLORS.white, marginBottom: 8 },
+  modalDesc: { ...FONTS.bodySmall, color: '#94A3B8', marginBottom: 16, lineHeight: 18 },
+  modalInput: {
+    backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 10,
+    paddingHorizontal: 14, paddingVertical: 12, color: COLORS.white,
+    borderWidth: 1, borderColor: '#475569', marginBottom: 20,
+    fontSize: 14,
+  },
+  modalActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 12 },
+  modalBtnCancel: { paddingHorizontal: 16, paddingVertical: 10 },
+  modalBtnCancelText: { ...FONTS.body, color: '#94A3B8' },
+  modalBtnSave: {
+    backgroundColor: COLORS.amberLight, borderRadius: 8,
+    paddingHorizontal: 20, paddingVertical: 10,
+  },
+  modalBtnSaveText: { ...FONTS.h3, color: COLORS.navy, fontSize: 14 },
 });

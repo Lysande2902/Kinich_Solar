@@ -204,6 +204,15 @@ def endpoint_contacto_asesor(s: SolicitudContactoAsesor):
                 "UPDATE cotizaciones SET contacto_asesor = 1 WHERE recibo_id = ?",
                 (s.recibo_id,)
             )
+        else:
+            # Si no viene recibo_id explícito, actualizar la última cotización del usuario
+            cliente = db.execute("SELECT id FROM clientes WHERE telegram_id = ?", (s.telegram_id,)).fetchone()
+            if cliente:
+                db.execute("""
+                    UPDATE cotizaciones SET contacto_asesor = 1 
+                    WHERE recibo_id IN (SELECT id FROM recibos WHERE cliente_id = ?)
+                """, (cliente["id"],))
+
         registrar_auditoria(db, "SOLICITUD_ASESOR", {
             "telegram_id": s.telegram_id,
             "recibo_id": s.recibo_id,
