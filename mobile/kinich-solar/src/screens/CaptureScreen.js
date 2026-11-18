@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
+import { MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { COLORS, FONTS, SHADOW } from '../constants/theme';
 import { leerRecibo } from '../api/client';
 
@@ -100,39 +101,39 @@ export default function CaptureScreen({ navigation, route }) {
 
         <TouchableOpacity style={styles.option} onPress={takePhoto} activeOpacity={0.8}>
           <View style={[styles.icon, { backgroundColor: '#FEF3C7' }]}>
-            <Text style={styles.iconText}>📷</Text>
+            <MaterialCommunityIcons name="camera-outline" size={24} color="#92400e" />
           </View>
           <View style={styles.optionText}>
             <Text style={styles.optionTitle}>Tomar foto del recibo</Text>
             <Text style={styles.optionDesc}>Usa la cámara para capturar el recibo físico.</Text>
           </View>
-          <Text style={styles.arrow}>›</Text>
+          <Feather name="chevron-right" size={22} color={COLORS.textMuted} />
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.option} onPress={pickImage} activeOpacity={0.8}>
           <View style={[styles.icon, { backgroundColor: '#EDE9FE' }]}>
-            <Text style={styles.iconText}>🖼️</Text>
+            <MaterialCommunityIcons name="image-outline" size={24} color="#5b21b6" />
           </View>
           <View style={styles.optionText}>
             <Text style={styles.optionTitle}>Elegir de la galería</Text>
             <Text style={styles.optionDesc}>Imagen JPEG o PNG de hasta 10 MB.</Text>
           </View>
-          <Text style={styles.arrow}>›</Text>
+          <Feather name="chevron-right" size={22} color={COLORS.textMuted} />
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.option} onPress={pickPdf} activeOpacity={0.8}>
           <View style={[styles.icon, { backgroundColor: '#DCFCE7' }]}>
-            <Text style={styles.iconText}>📄</Text>
+            <MaterialCommunityIcons name="file-pdf-box" size={24} color="#166534" />
           </View>
           <View style={styles.optionText}>
             <Text style={styles.optionTitle}>Subir el PDF de CFE</Text>
             <Text style={styles.optionDesc}>Documento oficial descargado de cfe.mx.</Text>
           </View>
-          <Text style={styles.arrow}>›</Text>
+          <Feather name="chevron-right" size={22} color={COLORS.textMuted} />
         </TouchableOpacity>
 
         <View style={styles.note}>
-          <Text style={styles.noteIcon}>🔒</Text>
+          <Feather name="shield" size={14} color={COLORS.textMuted} style={{ marginRight: 8, marginTop: 2 }} />
           <Text style={styles.noteText}>
             El archivo se procesa en memoria y se descarta al terminar el análisis. No se guarda en
             el dispositivo.
@@ -163,17 +164,14 @@ const styles = StyleSheet.create({
     padding: 16, marginBottom: 12, ...SHADOW,
   },
   icon: { width: 44, height: 44, borderRadius: 10, alignItems: 'center', justifyContent: 'center', marginRight: 14 },
-  iconText: { fontSize: 22 },
   optionText: { flex: 1 },
   optionTitle: { ...FONTS.h3, color: COLORS.textPrimary },
   optionDesc: { ...FONTS.bodySmall, color: COLORS.textSecondary, marginTop: 2 },
-  arrow: { fontSize: 24, color: COLORS.textMuted, fontWeight: '300' },
   note: {
     flexDirection: 'row', alignItems: 'flex-start',
     backgroundColor: COLORS.bgSoft, borderRadius: 10,
     padding: 14, marginTop: 8, marginBottom: 20,
   },
-  noteIcon: { fontSize: 14, marginRight: 8, marginTop: 1 },
   noteText: { ...FONTS.bodySmall, color: COLORS.textSecondary, flex: 1, lineHeight: 18 },
   link: { ...FONTS.bodySmall, color: COLORS.amber, textDecorationLine: 'underline', textAlign: 'center' },
 });

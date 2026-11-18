@@ -3,6 +3,8 @@ import {
   View, Text, ScrollView, TouchableOpacity, TextInput,
   StyleSheet, SafeAreaView, StatusBar, Modal, Alert
 } from 'react-native';
+
+import { MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { COLORS, FONTS, SHADOW } from '../constants/theme';
 import { registrarConsentimiento, getServerUrl, setServerUrl } from '../api/client';
 
@@ -52,7 +54,7 @@ export default function WelcomeScreen({ navigation }) {
         <View style={styles.header}>
           <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
             <View style={styles.logoBox}>
-              <Text style={styles.logoIcon}>☀️</Text>
+              <MaterialCommunityIcons name="solar-panel" size={26} color={COLORS.amber} />
             </View>
             <View>
               <Text style={styles.brand}>Kinich Solar</Text>
@@ -65,14 +67,14 @@ export default function WelcomeScreen({ navigation }) {
               onPress={() => navigation.navigate('History', { deviceId: DEVICE_ID })}
               activeOpacity={0.7}
             >
-              <Text style={styles.settingsIcon}>📂</Text>
+              <Feather name="folder" size={18} color={COLORS.navy} />
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.settingsBtn}
               onPress={() => setModalVisible(true)}
               activeOpacity={0.7}
             >
-              <Text style={styles.settingsIcon}>⚙️</Text>
+              <Feather name="settings" size={18} color={COLORS.navy} />
             </TouchableOpacity>
           </View>
         </View>
@@ -103,7 +105,7 @@ export default function WelcomeScreen({ navigation }) {
         {/* Tarjeta de privacidad */}
         <View style={styles.privacyCard}>
           <View style={styles.privacyHeader}>
-            <Text style={styles.privacyIcon}>🔒</Text>
+            <Feather name="lock" size={16} color={COLORS.navy} style={{ marginRight: 8 }} />
             <Text style={styles.privacyTitle}>Compromiso de privacidad</Text>
           </View>
           <Text style={styles.privacyBody}>
@@ -117,7 +119,7 @@ export default function WelcomeScreen({ navigation }) {
             'La sesión se descarta al cerrar la app',
           ].map((item) => (
             <View key={item} style={styles.checkRow}>
-              <Text style={styles.checkIcon}>✓</Text>
+              <Feather name="check" size={13} color={COLORS.amber} style={{ marginRight: 6 }} />
               <Text style={styles.checkText}>{item}</Text>
             </View>
           ))}

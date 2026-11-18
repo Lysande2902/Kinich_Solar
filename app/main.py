@@ -1,12 +1,15 @@
 import io
 import json
 import secrets
+import hashlib
+import hmac
+import time
 from contextlib import asynccontextmanager
 from PIL import Image, ImageOps
 import pypdfium2 as pdfium
-from fastapi import FastAPI, UploadFile, File, HTTPException, Depends, Body
+from fastapi import FastAPI, UploadFile, File, HTTPException, Depends, Body, Request, Form
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 
 from .config import settings
 from .db import get_db, init_db
@@ -26,6 +29,32 @@ from fastapi.responses import Response, HTMLResponse
 
 MAX_BYTES = 12 * 1024 * 1024
 FORMATOS_IMAGEN = {"JPEG": "image/jpeg", "PNG": "image/png"}
+_SESSION_TTL = 8 * 3600  # 8 horas en segundos
+
+# ---------------------------------------------------------------------------
+# Tokens de sesión firmados con HMAC-SHA256 (sin dependencias extra)
+# ---------------------------------------------------------------------------
+def _crear_token(username: str) -> str:
+    """Genera un token: base64url(payload)|hmac. Formato simple y sin deps JWT."""
+    import base64
+    expiry = int(time.time()) + _SESSION_TTL
+    payload = base64.urlsafe_b64encode(f"{username}:{expiry}".encode()).decode()
+    firma = hmac.new(settings.PANEL_SECRET_KEY.encode(), payload.encode(), hashlib.sha256).hexdigest()
+    return f"{payload}.{firma}"
+
+def _verificar_token(token: str) -> bool:
+    """Devuelve True si el token es válido y no ha expirado."""
+    import base64
+    try:
+        payload, firma = token.rsplit(".", 1)
+        firma_esperada = hmac.new(settings.PANEL_SECRET_KEY.encode(), payload.encode(), hashlib.sha256).hexdigest()
+        if not hmac.compare_digest(firma, firma_esperada):
+            return False
+        decoded = base64.urlsafe_b64decode(payload).decode()
+        _, expiry_str = decoded.rsplit(":", 1)
+        return int(time.time()) < int(expiry_str)
+    except Exception:
+        return False
 
 def preparar_imagen(raw: bytes) -> tuple[bytes, str]:
     if len(raw) > MAX_BYTES:
@@ -319,8 +348,80 @@ def _autenticar_admin(credenciales: HTTPBasicCredentials = Depends(seguridad)):
     if not (correcto_usuario and correcto_password):
         raise HTTPException(status_code=401, headers={"WWW-Authenticate": "Basic"})
 
+# ---------------------------------------------------------------------------
+# Panel web — login via formulario + cookie de sesión (B-04)
+# ---------------------------------------------------------------------------
+_LOGIN_HTML = """<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Acceso Panel — Kinich Solar</title>
+  <style>
+    body {{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+           background:#f8fafc;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0}}
+    .card{{background:white;border-radius:16px;padding:2.5rem 2rem;width:340px;box-shadow:0 4px 20px rgba(0,0,0,.1)}}
+    h2{{margin:0 0 1.5rem;color:#0f172a;font-size:1.4rem;text-align:center}}
+    .logo{{text-align:center;margin-bottom:1.2rem;font-size:2rem}}
+    label{{font-size:.85rem;font-weight:600;color:#475569;display:block;margin-bottom:4px}}
+    input{{width:100%;padding:10px 12px;border:1.5px solid #cbd5e1;border-radius:8px;font-size:14px;
+           box-sizing:border-box;margin-bottom:1rem;outline:none}}
+    input:focus{{border-color:#182b49}}
+    button{{width:100%;background:#182b49;color:white;border:none;padding:12px;border-radius:8px;
+            font-size:15px;font-weight:700;cursor:pointer}}
+    button:hover{{background:#1e3a5f}}
+    .err{{color:#dc2626;font-size:.85rem;text-align:center;margin-bottom:.75rem}}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">☀️</div>
+    <h2>Panel Kinich Solar</h2>
+    {error_html}
+    <form method="post" action="/panel/login">
+      <label>Usuario</label>
+      <input type="text" name="usuario" autocomplete="username" required>
+      <label>Contraseña</label>
+      <input type="password" name="password" autocomplete="current-password" required>
+      <button type="submit">Iniciar sesión</button>
+    </form>
+  </div>
+</body>
+</html>"""
+
+def _verificar_sesion_panel(request: Request):
+    """Dependencia: valida la cookie de sesión. Redirige al login si no existe o expiró."""
+    token = request.cookies.get("ks_panel_session")
+    if not token or not _verificar_token(token):
+        raise HTTPException(status_code=302, headers={"Location": "/panel/login"})
+
+@app.get("/panel/login", response_class=HTMLResponse)
+def panel_login_form():
+    return _LOGIN_HTML.format(error_html="")
+
+@app.post("/panel/login")
+def panel_login_submit(usuario: str = Form(...), password: str = Form(...)):
+    usuario_ok = secrets.compare_digest(usuario, settings.PANEL_USER)
+    password_ok = secrets.compare_digest(password, settings.PANEL_PASS)
+    if not (usuario_ok and password_ok):
+        html = _LOGIN_HTML.format(error_html="<p class='err'>Credenciales incorrectas.</p>")
+        return HTMLResponse(content=html, status_code=401)
+    token = _crear_token(usuario)
+    response = RedirectResponse(url="/panel", status_code=303)
+    response.set_cookie(
+        "ks_panel_session", token,
+        httponly=True, samesite="lax",
+        max_age=_SESSION_TTL
+    )
+    return response
+
+@app.get("/panel/logout")
+def panel_logout():
+    response = RedirectResponse(url="/panel/login", status_code=303)
+    response.delete_cookie("ks_panel_session")
+    return response
+
 @app.get("/panel", response_class=HTMLResponse)
-def vista_panel(_=Depends(_autenticar_admin)):
+def vista_panel(request: Request, _=Depends(_verificar_sesion_panel)):
     with get_db() as db:
         filas = db.execute("""
             SELECT c.creado_en, cl.telegram_id, r.kwh_periodo, r.tarifa, c.paneles, c.kwp,
@@ -377,6 +478,7 @@ def vista_panel(_=Depends(_autenticar_admin)):
         <div class="actions">
             <input type="text" id="searchInput" class="search-box" placeholder="Buscar por ID o Tarifa..." onkeyup="filtrarTabla()">
             <button class="btn-export" onclick="exportarCSV()">📥 Descargar CSV</button>
+            <a href="/panel/logout" class="btn-export" style="background:#ef4444;text-decoration:none;">Cerrar sesión</a>
         </div>
     </div>
     <table id="tablaCotizaciones">

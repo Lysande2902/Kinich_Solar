@@ -4,14 +4,15 @@ import {
   SafeAreaView, StatusBar, Alert,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import { MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { COLORS, FONTS, SHADOW } from '../constants/theme';
 import { leerPlaca } from '../api/client';
 
 const APPLIANCES = [
-  { key: 'minisplit_inv', label: 'Mini-split inverter', icon: '❄️' },
-  { key: 'minisplit_std', label: 'A/C tradicional', icon: '🌬️' },
-  { key: 'ev', label: 'Auto eléctrico', icon: '🚗' },
-  { key: 'pump', label: 'Bomba de agua', icon: '💧' },
+  { key: 'minisplit_inv', label: 'Mini-split inverter', icon: 'snowflake', iconLib: 'mci' },
+  { key: 'minisplit_std', label: 'A/C tradicional', icon: 'air-conditioner', iconLib: 'mci' },
+  { key: 'ev', label: 'Auto eléctrico', icon: 'car-electric-outline', iconLib: 'mci' },
+  { key: 'pump', label: 'Bomba de agua', icon: 'water-pump', iconLib: 'mci' },
 ];
 
 const CAPACITIES = ['1.0 ton', '1.5 ton', '2.0 ton'];
@@ -153,7 +154,12 @@ export default function SimulatorScreen({ navigation, route }) {
               onPress={() => { setAppliance(a.key); setScannedKw(null); }}
               activeOpacity={0.8}
             >
-              <Text style={styles.appIcon}>{a.icon}</Text>
+              <View style={styles.appIcon}>
+                {a.iconLib === 'mci'
+                  ? <MaterialCommunityIcons name={a.icon} size={24} color={appliance === a.key ? COLORS.white : COLORS.navy} />
+                  : <Feather name={a.icon} size={22} color={appliance === a.key ? COLORS.white : COLORS.navy} />
+                }
+              </View>
               <Text style={[styles.appLabel, appliance === a.key && styles.appLabelActive]}>
                 {a.label}
               </Text>

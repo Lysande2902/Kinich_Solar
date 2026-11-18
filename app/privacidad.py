@@ -1,6 +1,6 @@
 import json
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timezone
 
 TEXTO_AVISO = (
     "Bienvenido a Kinich Solar.\n\n"
@@ -30,7 +30,7 @@ def tiene_consentimiento(db: sqlite3.Connection, telegram_id: int) -> bool:
     return bool(fila and fila["consentimiento"] == 1)
 
 def registrar_consentimiento(db: sqlite3.Connection, telegram_id: int, version_aviso: str = "v1.0"):
-    ahora = datetime.utcnow().isoformat()
+    ahora = datetime.now(timezone.utc).isoformat()
     db.execute("""
         INSERT INTO clientes (telegram_id, consentimiento, consentimiento_fecha, version_aviso)
         VALUES (?, 1, ?, ?)
